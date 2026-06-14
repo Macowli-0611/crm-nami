@@ -2,9 +2,22 @@ import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import path from 'path';
 
-const SPREADSHEET_ID = '1yDwJXy_LULzuwObs_EiIwqKHfnmH-CT_TXDZewHyxYA';
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID || '1yDwJXy_LULzuwObs_EiIwqKHfnmH-CT_TXDZewHyxYA';
 
 async function getSheetsInstance() {
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+    try {
+      const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+      const auth = new google.auth.GoogleAuth({
+        credentials,
+        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+      });
+      return google.sheets({ version: 'v4', auth });
+    } catch (e) {
+      console.error("Error parsing GOOGLE_SERVICE_ACCOUNT_JSON:", e);
+    }
+  }
+
   const auth = new google.auth.GoogleAuth({
     keyFile: path.join(process.cwd(), 'credentials.json'),
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
