@@ -77,10 +77,15 @@ export async function POST(request: Request) {
         const nameRow = configRows.find((r: any) => r[0] === nameKey);
         const priceRow = configRows.find((r: any) => r[0] === priceKey);
         if (nameRow || priceRow) {
-          plans.push({
-            name: nameRow?.[1] || `Plan ${i}`,
-            price: parseFloat(priceRow?.[1] || '0') || 0
-          });
+          const nameVal = nameRow?.[1]?.trim() || '';
+          const priceVal = priceRow?.[1]?.trim() || '';
+          // Only include if name or price is non-empty
+          if (nameVal !== '' || priceVal !== '') {
+            plans.push({
+              name: nameVal || `Plan ${i}`,
+              price: parseFloat(priceVal || '0') || 0
+            });
+          }
         }
       }
 

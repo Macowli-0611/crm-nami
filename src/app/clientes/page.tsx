@@ -46,7 +46,7 @@ export default function ClientesPage() {
     type: '',
     zone: '',
     contacts: [{ name: '', phone: '' }] as Contact[],
-    status: 'Prospecto',
+    status: 'Sin visitar',
     interest: 'Alto',
     nextAction: '',
     testMonths: '',
@@ -109,7 +109,7 @@ export default function ClientesPage() {
       type: '',
       zone: '',
       contacts: [{ name: '', phone: '' }],
-      status: 'Prospecto',
+      status: 'Sin visitar',
       interest: 'Alto',
       nextAction: '',
       testMonths: '',
@@ -186,7 +186,7 @@ export default function ClientesPage() {
       type: client.type || '',
       zone: client.zone || '',
       contacts: contactsList,
-      status: client.status || 'Prospecto',
+      status: client.status || 'Sin visitar',
       interest: client.interest || 'Alto',
       nextAction: client.nextAction || '',
       testMonths: parsedDate,
@@ -354,9 +354,10 @@ export default function ClientesPage() {
 
   const getStatusColor = (status: string) => {
     const s = status.toLowerCase();
-    if(s.includes('activo') || s.includes('cerrado')) return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
-    if(s.includes('prueba')) return "bg-amber-500/20 text-amber-400 border-amber-500/30";
-    if(s.includes('reunión') || s.includes('cita')) return "bg-violet-500/20 text-violet-400 border-violet-500/30";
+    if (s.includes('activo') || s.includes('cerrado')) return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+    if (s.includes('cita') || s.includes('interesado')) return "bg-violet-500/20 text-violet-400 border-violet-500/30";
+    if (s.includes('pendiente')) return "bg-amber-500/20 text-amber-400 border-amber-500/30";
+    if (s.includes('no interesado')) return "bg-red-500/20 text-red-400 border-red-500/30";
     return "bg-blue-500/20 text-blue-400 border-blue-500/30";
   };
 
@@ -450,6 +451,22 @@ export default function ClientesPage() {
     }
     
     return matchesSearch && matchesStatus && matchesInterest && matchesPlan;
+  }).sort((a, b) => {
+    const statusPriority: { [key: string]: number } = {
+      'cliente activo': 1,
+      'cita / interesado': 2,
+      'pendiente': 3,
+      'no interesado': 4,
+      'sin visitar': 5
+    };
+    const aPriority = statusPriority[(a.status || '').toLowerCase()] || 99;
+    const bPriority = statusPriority[(b.status || '').toLowerCase()] || 99;
+    
+    if (aPriority !== bPriority) {
+      return aPriority - bPriority;
+    }
+    // Stable sort fallback by rowIndex to maintain sheet order
+    return (a.rowIndex || 0) - (b.rowIndex || 0);
   });
 
   return (
@@ -495,10 +512,11 @@ export default function ClientesPage() {
             className="w-full glass border border-slate-700/50 rounded-xl px-4 py-2.5 text-sm text-slate-300 outline-none focus:border-blue-500/50"
           >
             <option value="Todos">Todos los Estados</option>
-            <option value="Prospecto">Prospecto</option>
-            <option value="Cita / Interesado">Cita / Interesado</option>
-            <option value="En prueba">En prueba</option>
             <option value="Cliente activo">Cliente activo</option>
+            <option value="Cita / Interesado">Cita / Interesado</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="No interesado">No interesado</option>
+            <option value="Sin visitar">Sin visitar</option>
           </select>
         </div>
 
@@ -604,7 +622,7 @@ export default function ClientesPage() {
                       <td className="py-4 pr-3">
                         <div className="flex flex-col gap-1.5 items-start">
                           <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getStatusColor(c.status)}`}>
-                            {c.status || 'Prospecto'}
+                            {c.status || 'Sin visitar'}
                           </span>
                           {c.interest && (
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${getInterestColor(c.interest)}`}>
@@ -808,10 +826,11 @@ export default function ClientesPage() {
                       onChange={e => setFormData({...formData, status: e.target.value})} 
                       className="w-full bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500/50"
                     >
-                      <option value="Prospecto">Prospecto</option>
-                      <option value="Cita / Interesado">Cita / Interesado</option>
-                      <option value="En prueba">En prueba</option>
                       <option value="Cliente activo">Cliente activo</option>
+                      <option value="Cita / Interesado">Cita / Interesado</option>
+                      <option value="Pendiente">Pendiente</option>
+                      <option value="No interesado">No interesado</option>
+                      <option value="Sin visitar">Sin visitar</option>
                     </select>
                   </div>
                   <div>

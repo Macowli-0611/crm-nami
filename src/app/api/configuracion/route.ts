@@ -75,11 +75,16 @@ Quedo atento 😊`;
       const textRow = rows.find(r => r[0] === textKey);
       
       if (nameRow || textRow) {
-        config.templates.push({
-          id: i,
-          name: nameRow?.[1] || `Plantilla ${i}`,
-          text: textRow?.[1] || ''
-        });
+        const nameVal = nameRow?.[1]?.trim() || '';
+        const textVal = textRow?.[1]?.trim() || '';
+        // Only include if name or text is non-empty
+        if (nameVal !== '' || textVal !== '') {
+          config.templates.push({
+            id: i,
+            name: nameVal || `Plantilla ${i}`,
+            text: textVal || ''
+          });
+        }
       }
     }
 
@@ -114,11 +119,16 @@ Quedo atento 😊`;
       const priceRow = rows.find(r => r[0] === priceKey);
 
       if (nameRow || priceRow) {
-        config.plans.push({
-          id: i,
-          name: nameRow?.[1] || `Plan ${i}`,
-          price: parseFloat(priceRow?.[1] || '0') || 0
-        });
+        const nameVal = nameRow?.[1]?.trim() || '';
+        const priceVal = priceRow?.[1]?.trim() || '';
+        // Only include if name or price is non-empty
+        if (nameVal !== '' || priceVal !== '') {
+          config.plans.push({
+            id: i,
+            name: nameVal || `Plan ${i}`,
+            price: parseFloat(priceVal || '0') || 0
+          });
+        }
       }
     }
 

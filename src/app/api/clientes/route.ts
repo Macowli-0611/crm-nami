@@ -109,7 +109,7 @@ export async function POST(request: Request) {
             body.zone || '', 
             body.phone || '', 
             body.contactName || '', 
-            body.status || 'Prospecto', 
+            body.status || 'Sin visitar', 
             body.interest || '',
             body.nextAction || '', 
             body.testMonths || '', 

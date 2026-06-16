@@ -137,11 +137,11 @@ export default function Home() {
   const trialsActive = clientes.filter(c => {
     const status = (c.status || '').toLowerCase();
     const daysLeft = getDaysRemaining(c.testMonths);
-    return status.includes('prueba') || (daysLeft !== null && daysLeft >= 0);
+    return status.includes('pendiente') || (daysLeft !== null && daysLeft >= 0);
   });
 
   const statusFunnel = clientes.reduce((acc: any, c: any) => {
-    const status = c.status || 'Prospecto';
+    const status = c.status || 'Sin visitar';
     acc[status] = (acc[status] || 0) + 1;
     return acc;
   }, {});
@@ -405,8 +405,9 @@ export default function Home() {
                     
                     let barColor = "bg-blue-500";
                     if (status.toLowerCase().includes('activo')) barColor = "bg-emerald-500";
-                    else if (status.toLowerCase().includes('prueba')) barColor = "bg-amber-500";
-                    else if (status.toLowerCase().includes('cita') || status.toLowerCase().includes('reunión')) barColor = "bg-violet-500";
+                    else if (status.toLowerCase().includes('cita') || status.toLowerCase().includes('interesado')) barColor = "bg-violet-500";
+                    else if (status.toLowerCase().includes('pendiente')) barColor = "bg-amber-500";
+                    else if (status.toLowerCase().includes('no interesado')) barColor = "bg-red-500";
 
                     return (
                       <div key={idx} className="space-y-1">
@@ -463,10 +464,12 @@ export default function Home() {
                       <td className="py-4">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
                           c.status.toLowerCase().includes('activo') ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
-                          c.status.toLowerCase().includes('prueba') ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                          c.status.toLowerCase().includes('cita') || c.status.toLowerCase().includes('interesado') ? 'bg-violet-500/20 text-violet-400 border-violet-500/30' :
+                          c.status.toLowerCase().includes('pendiente') ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                          c.status.toLowerCase().includes('no interesado') ? 'bg-red-500/20 text-red-400 border-red-500/30' :
                           'bg-blue-500/20 text-blue-400 border-blue-500/30'
                         }`}>
-                          {c.status || 'Prospecto'}
+                          {c.status || 'Sin visitar'}
                         </span>
                       </td>
                       <td className="py-4 text-slate-300">
