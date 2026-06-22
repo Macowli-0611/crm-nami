@@ -370,10 +370,11 @@ export default function ClientesPage() {
 
   const getPlanBadge = (plan: string) => {
     const p = (plan || 'Ninguno').toLowerCase();
+    if (p === 'ninguno' || p === '') return "bg-slate-800/60 text-slate-400 border-slate-700/50";
     if (p.includes('pro')) return "bg-violet-500/20 text-violet-400 border-violet-500/30 font-bold";
     if (p.includes('plus')) return "bg-blue-500/20 text-blue-400 border-blue-500/30 font-bold";
     if (p.includes('custom') || p.includes('personalizado')) return "bg-fuchsia-500/20 text-fuchsia-400 border-fuchsia-500/30 font-bold";
-    return "bg-slate-800/60 text-slate-400 border-slate-700/50";
+    return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 font-bold";
   };
 
   const getDaysRemaining = (dateStr: string) => {
@@ -473,21 +474,42 @@ export default function ClientesPage() {
     <div className="w-full relative">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-violet-500">
+          <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-orange-400 to-pink-500">
             Base de Clientes
           </h1>
           <p className="text-slate-400 mt-1">Gestión bidireccional en tiempo real con Google Sheets</p>
         </div>
         <button 
           onClick={openNewModal}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all shadow-lg shadow-blue-900/30 active:scale-95"
+          className="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all shadow-lg shadow-orange-900/30 active:scale-95"
         >
           <Plus size={16} />
           Nuevo Cliente
         </button>
       </header>
 
-      {/* Filters Area */}
+      {/* ── KPI Stats Bar ─────────────────────────────────────────────────────── */}
+      {clientes.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+          {[
+            { label: 'Total en sistema', value: clientes.length, color: 'text-slate-200', bg: 'bg-slate-800/40', border: 'border-slate-700/40', dot: 'bg-slate-400' },
+            { label: 'Clientes activos', value: clientes.filter(c => (c.status||'').toLowerCase() === 'cliente activo').length, color: 'text-emerald-300', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', dot: 'bg-emerald-400' },
+            { label: 'Cita / Interesado', value: clientes.filter(c => (c.status||'').toLowerCase().includes('cita') || (c.status||'').toLowerCase().includes('interesado')).length, color: 'text-violet-300', bg: 'bg-violet-500/10', border: 'border-violet-500/20', dot: 'bg-violet-400' },
+            { label: 'En prueba gratis', value: clientes.filter(c => !!c.testMonths).length, color: 'text-amber-300', bg: 'bg-amber-500/10', border: 'border-amber-500/20', dot: 'bg-amber-400' },
+            { label: 'Sin visitar', value: clientes.filter(c => !c.status || c.status === 'Sin visitar').length, color: 'text-slate-400', bg: 'bg-slate-800/20', border: 'border-slate-800/50', dot: 'bg-slate-600' },
+          ].map(({ label, value, color, bg, border, dot }) => (
+            <div key={label} className={`${bg} border ${border} rounded-xl px-4 py-3.5 flex items-center gap-3 transition-all hover:brightness-110`}>
+              <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${dot}`} />
+              <div>
+                <div className={`text-2xl font-extrabold leading-none ${color}`}>{value}</div>
+                <div className="text-[10px] text-slate-500 font-medium mt-0.5">{label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Filters Area ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
         <div className="relative glass rounded-xl px-4 py-2 flex items-center md:col-span-2">
           <Search size={18} className="text-slate-400 mr-2" />
@@ -509,7 +531,7 @@ export default function ClientesPage() {
           <select 
             value={statusFilter} 
             onChange={e => setStatusFilter(e.target.value)}
-            className="w-full glass border border-slate-700/50 rounded-xl px-4 py-2.5 text-sm text-slate-300 outline-none focus:border-blue-500/50"
+            className="w-full glass border border-slate-700/50 rounded-xl px-4 py-2.5 text-sm text-slate-300 outline-none focus:border-orange-500/50"
           >
             <option value="Todos">Todos los Estados</option>
             <option value="Cliente activo">Cliente activo</option>
@@ -524,12 +546,14 @@ export default function ClientesPage() {
           <select 
             value={planFilter} 
             onChange={e => setPlanFilter(e.target.value)}
-            className="w-full glass border border-slate-700/50 rounded-xl px-4 py-2.5 text-sm text-slate-300 outline-none focus:border-blue-500/50 font-semibold animate-pulse-none"
+            className="w-full glass border border-slate-700/50 rounded-xl px-4 py-2.5 text-sm text-slate-300 outline-none focus:border-orange-500/50 font-semibold"
           >
             <option value="Todos">Todos los Planes</option>
             {planes.map(p => (
-              <option key={p.id} value={`Plan ${p.name}`}>Plan {p.name}</option>
+              <option key={p.id} value={p.name}>{p.name}</option>
             ))}
+            <option value="Plus">Plan Plus (Heredado)</option>
+            <option value="Pro">Plan Pro (Heredado)</option>
             <option value="Custom">Plan Custom</option>
             <option value="Ninguno">Sin Plan / Prueba</option>
           </select>
@@ -539,7 +563,7 @@ export default function ClientesPage() {
           <select 
             value={interestFilter} 
             onChange={e => setInterestFilter(e.target.value)}
-            className="w-full glass border border-slate-700/50 rounded-xl px-4 py-2.5 text-sm text-slate-300 outline-none focus:border-blue-500/50"
+            className="w-full glass border border-slate-700/50 rounded-xl px-4 py-2.5 text-sm text-slate-300 outline-none focus:border-orange-500/50"
           >
             <option value="Todos">Cualquier Interés</option>
             <option value="Alto">Alto</option>
@@ -557,12 +581,26 @@ export default function ClientesPage() {
         </div>
       )}
 
-      {/* Table Card */}
+      {/* ── Table Card ───────────────────────────────────────────────────────── */}
       <div className="glass-card p-6 overflow-hidden">
+        {/* Table Header with result count */}
+        {!loading && (
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800/50">
+            <p className="text-xs text-slate-500">
+              Mostrando <span className="text-slate-300 font-semibold">{filteredClientes.length}</span> de <span className="text-slate-300 font-semibold">{clientes.length}</span> clientes
+              {(searchTerm || statusFilter !== 'Todos' || interestFilter !== 'Todos' || planFilter !== 'Todos') && (
+                <button onClick={() => { setSearchTerm(''); setStatusFilter('Todos'); setInterestFilter('Todos'); setPlanFilter('Todos'); }} className="ml-2 text-orange-400 hover:text-orange-300 underline">
+                  Limpiar filtros
+                </button>
+              )}
+            </p>
+            <p className="text-[10px] text-slate-600">Ordenados por estado comercial</p>
+          </div>
+        )}
         <div className="overflow-x-auto">
           {loading && clientes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <Loader2 className="animate-spin text-blue-500 h-8 w-8" />
+              <Loader2 className="animate-spin text-orange-500 h-8 w-8" />
               <span className="text-slate-400 text-sm">Obteniendo datos de Google Sheets...</span>
             </div>
           ) : (
@@ -632,10 +670,14 @@ export default function ClientesPage() {
                         </div>
                       </td>
                       <td className="py-4 pr-3">
-                        <span className={`px-3 py-1 rounded-lg text-xs font-semibold border inline-flex items-center gap-1 ${getPlanBadge(c.plan)}`}>
-                          <Award size={12} />
-                          {c.plan || 'Ninguno'}
-                        </span>
+                        <div className="flex flex-wrap gap-1 max-w-[200px]">
+                          {(c.plan || 'Ninguno').split(',').map((p: string) => p.trim()).filter(Boolean).map((pl: string, idx: number) => (
+                            <span key={idx} className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold border inline-flex items-center gap-1 ${getPlanBadge(pl)}`}>
+                              <Award size={10} />
+                              {pl}
+                            </span>
+                          ))}
+                        </div>
                       </td>
                       <td className="py-4 pr-3">
                         <div className="flex flex-col gap-1.5 items-start">
@@ -846,18 +888,14 @@ export default function ClientesPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Plan Contratado</label>
-                    <select 
-                      value={formData.plan} 
-                      onChange={e => setFormData({...formData, plan: e.target.value})} 
-                      className="w-full bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500/50"
-                    >
-                      <option value="Ninguno">Ninguno / Prueba</option>
-                      {planes.map(p => (
-                        <option key={p.id} value={`Plan ${p.name}`}>Plan {p.name} (${p.price})</option>
-                      ))}
-                      <option value="Custom">Custom / Personalizado</option>
-                    </select>
+                    <label className="block text-xs text-slate-400 mb-1">Próxima Acción (Comercial)</label>
+                    <input 
+                      type="text" 
+                      value={formData.nextAction} 
+                      onChange={e => setFormData({...formData, nextAction: e.target.value})} 
+                      placeholder="Ej: Enviar propuesta"
+                      className="w-full bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500/50 transition-colors" 
+                    />
                   </div>
                   
                   <div>
@@ -878,15 +916,144 @@ export default function ClientesPage() {
                       className="w-full bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500/50 transition-colors" 
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1">Próxima Acción (Comercial)</label>
-                    <input 
-                      type="text" 
-                      value={formData.nextAction} 
-                      onChange={e => setFormData({...formData, nextAction: e.target.value})} 
-                      placeholder="Ej: Enviar propuesta"
-                      className="w-full bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500/50 transition-colors" 
-                    />
+                  <div className="hidden md:block"></div> {/* Spacer to keep dates in a neat row */}
+
+                  {/* Multi-plan checkboxes panel */}
+                  <div className="col-span-1 md:col-span-3">
+                    <label className="block text-xs text-slate-400 mb-2 font-medium">Planes Contratados (Selecciona uno o más)</label>
+                    <div className="max-h-60 overflow-y-auto pr-2 space-y-3 bg-slate-900/40 border border-slate-800/60 rounded-lg p-3">
+                      {planes.map((p: any) => (
+                        <div key={p.id} className="space-y-1.5">
+                          <div className="text-xs font-semibold text-slate-350 bg-slate-800/30 px-2 py-0.5 rounded border border-slate-700/10">
+                            {p.name}
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pl-2">
+                            {p.subplans?.map((sub: any) => {
+                              const planVal = `${p.name} - ${sub.name}`;
+                              const selectedPlans = (formData.plan || 'Ninguno')
+                                .split(',')
+                                .map((x: string) => x.trim())
+                                .filter(Boolean);
+                              const isChecked = selectedPlans.includes(planVal);
+
+                              return (
+                                <label
+                                  key={sub.id}
+                                  className={`flex items-center gap-2 text-xs px-2 py-1.5 rounded border cursor-pointer select-none transition-all ${
+                                    isChecked
+                                      ? 'bg-blue-500/10 border-blue-500/30 text-blue-300 font-semibold'
+                                      : 'bg-slate-850/40 border-slate-700/30 text-slate-400 hover:text-slate-200 hover:bg-slate-800/30'
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      let updatedList = selectedPlans.filter(
+                                        (x) => x !== 'Ninguno' && x !== 'Custom'
+                                      );
+                                      if (e.target.checked) {
+                                        updatedList.push(planVal);
+                                      } else {
+                                        updatedList = updatedList.filter((x) => x !== planVal);
+                                      }
+                                      setFormData({
+                                        ...formData,
+                                        plan: updatedList.length > 0 ? updatedList.join(', ') : 'Ninguno'
+                                      });
+                                    }}
+                                    className="rounded border-slate-700 bg-slate-900 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900"
+                                  />
+                                  <span>
+                                    {sub.name} <span className="text-[10px] opacity-80">(${sub.price}/mes)</span>
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {/* Custom and Legacy fallback */}
+                      <div className="pt-2 border-t border-slate-850 space-y-2">
+                        {(() => {
+                          const selectedPlans = (formData.plan || 'Ninguno')
+                            .split(',')
+                            .map((x: string) => x.trim())
+                            .filter(Boolean);
+                          const isCustomChecked = selectedPlans.includes('Custom');
+
+                          return (
+                            <label
+                              className={`flex items-center gap-2 text-xs px-2 py-1.5 rounded border cursor-pointer select-none transition-all ${
+                                isCustomChecked
+                                  ? 'bg-blue-500/10 border-blue-500/30 text-blue-300 font-semibold'
+                                  : 'bg-slate-850/40 border-slate-700/30 text-slate-400 hover:text-slate-200 hover:bg-slate-800/30'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isCustomChecked}
+                                onChange={(e) => {
+                                  let updatedList = selectedPlans.filter((x) => x !== 'Ninguno');
+                                  if (e.target.checked) {
+                                    updatedList.push('Custom');
+                                  } else {
+                                    updatedList = updatedList.filter((x) => x !== 'Custom');
+                                  }
+                                  setFormData({
+                                    ...formData,
+                                    plan: updatedList.length > 0 ? updatedList.join(', ') : 'Ninguno'
+                                  });
+                                }}
+                                className="rounded border-slate-700 bg-slate-900 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900"
+                              />
+                              <span className="font-semibold text-slate-300">Custom / Personalizado</span>
+                            </label>
+                          );
+                        })()}
+
+                        {/* Legacy fallback */}
+                        {(() => {
+                          const selectedPlans = (formData.plan || 'Ninguno')
+                            .split(',')
+                            .map((x: string) => x.trim())
+                            .filter(Boolean);
+                          // A plan is considered legacy if it's not Ninguno, Custom, and doesn't match any active config plan subplan
+                          const legacyPlans = selectedPlans.filter(
+                            (sp) =>
+                              sp !== 'Ninguno' &&
+                              sp !== 'Custom' &&
+                              !planes.some((p: any) =>
+                                p.subplans?.some((sub: any) => `${p.name} - ${sub.name}` === sp)
+                              )
+                          );
+
+                          if (legacyPlans.length === 0) return null;
+
+                          return legacyPlans.map((legacyPlan) => (
+                            <label
+                              key={legacyPlan}
+                              className="flex items-center gap-2 text-xs px-2 py-1.5 rounded border bg-amber-500/5 border-amber-500/20 text-amber-300 select-none cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={true}
+                                onChange={() => {
+                                  const updatedList = selectedPlans.filter((x) => x !== legacyPlan);
+                                  setFormData({
+                                    ...formData,
+                                    plan: updatedList.length > 0 ? updatedList.join(', ') : 'Ninguno'
+                                  });
+                                }}
+                                className="rounded border-amber-600 bg-slate-900 text-amber-500 focus:ring-amber-500 focus:ring-offset-slate-900"
+                              />
+                              <span className="truncate">{legacyPlan} <span className="text-[9px] opacity-75 font-semibold">(Heredado)</span></span>
+                            </label>
+                          ));
+                        })()}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

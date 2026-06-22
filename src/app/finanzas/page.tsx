@@ -4,6 +4,8 @@ import { ArrowUpRight, ArrowDownRight, DollarSign, Plus, Loader2, Edit2, Trash2,
 
 export default function FinanzasPage() {
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [newCategoryName, setNewCategoryName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -30,8 +32,6 @@ export default function FinanzasPage() {
     amount: '',
     notes: ''
   });
-
-  const categories = ["Planes", "Soporte", "Publicidad", "Servicios", "Suscripciones", "Comisiones", "Sueldos", "Otro"];
 
   const loadTransactions = async () => {
     try {
@@ -63,16 +63,32 @@ export default function FinanzasPage() {
     }
 
     loadTransactions();
+
+    // Fetch config for categories
+    fetch("/api/configuracion")
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data.categories) {
+          setCategories(data.data.categories);
+        } else {
+          setCategories(["Planes", "Soporte", "Publicidad", "Servicios", "Suscripciones", "Comisiones", "Sueldos", "Otro"]);
+        }
+      })
+      .catch(e => {
+        console.error("Error loading categories config:", e);
+        setCategories(["Planes", "Soporte", "Publicidad", "Servicios", "Suscripciones", "Comisiones", "Sueldos", "Otro"]);
+      });
   }, []);
 
   const openNewModal = () => {
     setEditingTransaction(null);
+    setNewCategoryName("");
     setFormData({
       rowIndex: null,
       type: 'Ingreso',
       date: new Date().toISOString().split('T')[0],
       concept: '',
-      category: 'Planes',
+      category: categories[0] || 'Planes',
       amount: '',
       notes: ''
     });
@@ -81,6 +97,7 @@ export default function FinanzasPage() {
 
   const openEditModal = (t: any) => {
     setEditingTransaction(t);
+    setNewCategoryName("");
     
     // Parse date from DD/MM/YYYY to YYYY-MM-DD
     let formattedDate = '';
@@ -128,11 +145,13 @@ export default function FinanzasPage() {
         ? `${parseInt(dateParts[2])}/${parseInt(dateParts[1])}/${dateParts[0]}`
         : formData.date;
 
+      const categoryToSave = formData.category === 'NEW_CATEGORY' ? newCategoryName.trim() : formData.category;
+
       const payload = {
         rowIndex: formData.rowIndex,
         date: formattedDate,
         concept: formData.concept,
-        category: formData.category,
+        category: categoryToSave,
         amount: finalAmount,
         notes: formData.notes
       };
@@ -146,6 +165,30 @@ export default function FinanzasPage() {
       const data = await response.json();
       
       if (data.success) {
+        // If a new category was created, save it to the config
+        if (formData.category === 'NEW_CATEGORY' && categoryToSave) {
+          try {
+            const configRes = await fetch("/api/configuracion");
+            const configData = await configRes.json();
+            if (configData.success) {
+              const updatedCategories = Array.from(new Set([...(configData.data.categories || categories), categoryToSave]));
+              const newConfig = {
+                ...configData.data,
+                categories: updatedCategories
+              };
+              await fetch("/api/configuracion", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(newConfig)
+              });
+              setCategories(updatedCategories);
+            }
+          } catch (err) {
+            console.error("Failed to save new category in config:", err);
+          }
+        }
+
+        setNewCategoryName("");
         await loadTransactions();
         setShowModal(false);
       } else {
@@ -227,19 +270,59 @@ export default function FinanzasPage() {
   });
 
   const uniqueCategories = Array.from(new Set(transactions.map(t => t.category).filter(Boolean)));
+  const allCategories = Array.from(new Set([...categories, ...uniqueCategories]));
+
+  // Analytics Calculations for Charts
+  const categoryStats = filteredTransactions.reduce((acc: any, t) => {
+    const cat = t.category || "Otros";
+    if (!acc[cat]) {
+      acc[cat] = { income: 0, expense: 0 };
+    }
+    if (t.amount >= 0) {
+      acc[cat].income += t.amount;
+    } else {
+      acc[cat].expense += Math.abs(t.amount);
+    }
+    return acc;
+  }, {});
+
+  const maxVal = Math.max(...Object.values(categoryStats).map((s: any) => Math.max(s.income, s.expense)), 1);
+
+  const totalExpenses = Object.values(categoryStats).reduce((sum: number, s: any) => sum + s.expense, 0);
+
+  const expenseCategories = Object.keys(categoryStats)
+    .map(cat => ({
+      name: cat,
+      value: categoryStats[cat].expense,
+      percent: totalExpenses > 0 ? (categoryStats[cat].expense / totalExpenses) * 100 : 0
+    }))
+    .filter(item => item.value > 0)
+    .sort((a, b) => b.value - a.value);
+
+  // Colors for donut chart
+  const donutColors = [
+    "#ef4444", // Red
+    "#3b82f6", // Blue
+    "#a855f7", // Purple
+    "#f59e0b", // Amber
+    "#06b6d4", // Cyan
+    "#ec4899", // Pink
+    "#10b981", // Emerald
+    "#6366f1"  // Indigo
+  ];
 
   return (
     <div className="w-full">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-500">
+          <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-orange-400 to-pink-500">
             Finanzas y Estadísticas
           </h1>
           <p className="text-slate-400 mt-1">Conectado en vivo y bidireccional con tu Google Sheet</p>
         </div>
         <button 
           onClick={openNewModal}
-          className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all shadow-lg shadow-emerald-900/30 active:scale-95"
+          className="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all shadow-lg shadow-orange-900/30 active:scale-95"
         >
           <Plus size={16} />
           Nuevo Movimiento
@@ -277,16 +360,149 @@ export default function FinanzasPage() {
         </div>
 
         <div className="glass-card p-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-blue-500/20 rounded-full blur-xl"></div>
+          <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-orange-500/20 rounded-full blur-xl"></div>
           <div className="flex justify-between items-start mb-2 relative z-10">
             <h3 className="text-slate-400 text-sm font-medium">Beneficio Neto</h3>
-            <div className="p-2 bg-blue-500/10 rounded-lg">
+            <div className="p-2 bg-orange-500/10 rounded-lg">
               <DollarSign size={20} className="text-blue-400" />
             </div>
           </div>
-          <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-1 relative z-10">
+          <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-400 mb-1 relative z-10">
             ${net.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
           </div>
+        </div>
+      </div>
+
+      {/* Analítica y Gráficos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 animate-fade-in">
+        {/* Gráfico 1: Comparativa de Ingresos vs Gastos */}
+        <div className="glass-card p-6">
+          <h3 className="text-sm font-semibold text-slate-200 mb-2">Ingresos vs Gastos por Categoría</h3>
+          <p className="text-xs text-slate-450 mb-6">Comparación acumulada en el período seleccionado</p>
+          
+          {Object.keys(categoryStats).length === 0 ? (
+            <div className="flex items-center justify-center h-48 text-xs text-slate-500">
+              No hay datos para mostrar en este período.
+            </div>
+          ) : (
+            <div className="space-y-4 max-h-64 overflow-y-auto pr-1">
+              {Object.keys(categoryStats).map((cat) => {
+                const stats = categoryStats[cat];
+                const incPercent = (stats.income / maxVal) * 100;
+                const expPercent = (stats.expense / maxVal) * 100;
+
+                return (
+                  <div key={cat} className="space-y-1.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="font-semibold text-slate-350">{cat}</span>
+                      <span className="text-slate-400">
+                        {stats.income > 0 && <span className="text-emerald-400 mr-2">+$ {stats.income.toLocaleString('es-ES', { maximumFractionDigits: 0 })}</span>}
+                        {stats.expense > 0 && <span className="text-red-400">-$ {stats.expense.toLocaleString('es-ES', { maximumFractionDigits: 0 })}</span>}
+                      </span>
+                    </div>
+                    <div className="space-y-1 pl-1">
+                      {/* Barra Ingresos */}
+                      {stats.income > 0 && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] text-emerald-500/80 w-6 shrink-0 font-semibold">ING</span>
+                          <div className="flex-1 bg-slate-900/50 rounded-full h-2.5 overflow-hidden border border-slate-800/30">
+                            <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${incPercent}%` }}></div>
+                          </div>
+                        </div>
+                      )}
+                      {/* Barra Gastos */}
+                      {stats.expense > 0 && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] text-red-500/80 w-6 shrink-0 font-semibold">GAS</span>
+                          <div className="flex-1 bg-slate-900/50 rounded-full h-2.5 overflow-hidden border border-slate-800/30">
+                            <div className="bg-red-500 h-full rounded-full transition-all duration-500" style={{ width: `${expPercent}%` }}></div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Gráfico 2: Distribución de Gastos */}
+        <div className="glass-card p-6 flex flex-col justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-200 mb-2">Distribución de Gastos</h3>
+            <p className="text-xs text-slate-450 mb-6">Proporción de egresos por categoría</p>
+          </div>
+
+          {totalExpenses === 0 ? (
+            <div className="flex items-center justify-center h-48 text-xs text-slate-500">
+              No hay gastos registrados en este período.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+              {/* Donut Chart SVG */}
+              <div className="flex justify-center relative">
+                <svg width="150" height="150" viewBox="0 0 160 160" className="transform -rotate-90">
+                  {(() => {
+                    let accumulatedPercent = 0;
+                    const radius = 50;
+                    const circumference = 2 * Math.PI * radius; // 314.16
+
+                    return expenseCategories.map((item, idx) => {
+                      const color = donutColors[idx % donutColors.length];
+                      const strokeDasharray = `${(item.percent / 100) * circumference} ${circumference}`;
+                      const strokeDashoffset = `${- (accumulatedPercent / 100) * circumference}`;
+                      accumulatedPercent += item.percent;
+
+                      return (
+                        <circle
+                          key={item.name}
+                          r={radius}
+                          cx="80"
+                          cy="80"
+                          fill="transparent"
+                          stroke={color}
+                          strokeWidth="18"
+                          strokeDasharray={strokeDasharray}
+                          strokeDashoffset={strokeDashoffset}
+                          className="transition-all duration-500 hover:stroke-white cursor-pointer"
+                        >
+                          <title>{`${item.name}: ${item.percent.toFixed(1)}%`}</title>
+                        </circle>
+                      );
+                    });
+                  })()}
+                  {/* Inner cutout for donut */}
+                  <circle r="40" cx="80" cy="80" fill="#0d1527" /> {/* Matches card dark background */}
+                </svg>
+                {/* Center text showing Total Expense */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-[9px] text-slate-400 uppercase font-semibold">Total Gastos</span>
+                  <span className="text-sm font-bold text-slate-200 mt-0.5">
+                    ${totalExpenses.toLocaleString('es-ES', { maximumFractionDigits: 0 })}
+                  </span>
+                </div>
+              </div>
+
+              {/* Legend */}
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                {expenseCategories.map((item, idx) => {
+                  const color = donutColors[idx % donutColors.length];
+                  return (
+                    <div key={item.name} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2 min-w-0 pr-1">
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }}></span>
+                        <span className="text-slate-300 truncate" title={item.name}>{item.name}</span>
+                      </div>
+                      <span className="font-semibold text-slate-255 shrink-0">
+                        {item.percent.toFixed(1)}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -327,7 +543,7 @@ export default function FinanzasPage() {
               className="w-full glass border border-slate-700/50 rounded-xl px-3 py-2.5 text-xs text-slate-300 outline-none focus:border-emerald-500/50"
             >
               <option value="Todos">Todas las Categorías</option>
-              {Array.from(new Set([...categories, ...uniqueCategories])).map((cat) => (
+              {allCategories.map((cat) => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
@@ -510,13 +726,28 @@ export default function FinanzasPage() {
                 <select
                   value={formData.category}
                   onChange={e => setFormData({...formData, category: e.target.value})}
-                  className="w-full bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-emerald-500/50"
+                  className="w-full bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-emerald-500/50 font-semibold"
                 >
-                  {categories.map((cat) => (
+                  {allCategories.map((cat) => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
+                  <option value="NEW_CATEGORY" className="text-emerald-450 font-bold">+ Crear Nueva Categoría...</option>
                 </select>
               </div>
+
+              {formData.category === 'NEW_CATEGORY' && (
+                <div className="animate-fade-in">
+                  <label className="block text-xs text-slate-400 mb-1">Nombre de la Nueva Categoría *</label>
+                  <input
+                    required
+                    type="text"
+                    value={newCategoryName}
+                    onChange={e => setNewCategoryName(e.target.value)}
+                    placeholder="Ej: Mantenimiento, Hosting, Impuestos..."
+                    className="w-full bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-emerald-500/50 transition-colors"
+                  />
+                </div>
+              )}
 
               {/* Notes */}
               <div>
@@ -557,7 +788,7 @@ export default function FinanzasPage() {
                   <button 
                     type="submit" 
                     disabled={saving || deleting} 
-                    className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-semibold text-white shadow-lg shadow-emerald-900/20 transition-all active:scale-95"
+                    className="bg-orange-600 hover:bg-orange-500 disabled:opacity-50 flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-semibold text-white shadow-lg shadow-orange-900/20 transition-all active:scale-95"
                   >
                     {saving && <Loader2 size={14} className="animate-spin" />}
                     {saving ? 'Guardando...' : editingTransaction ? 'Guardar Cambios' : 'Registrar'}

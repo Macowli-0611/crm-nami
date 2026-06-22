@@ -10,36 +10,35 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // If already authorized, redirect immediately to dashboard
-    const isAuth = document.cookie.includes("nami_session=authorized") || localStorage.getItem("nami_session") === "authorized";
-    if (isAuth) {
-      router.push("/");
-    }
+    // We remove the insecure client-side auth check.
+    // The middleware now handles all authentication.
   }, [router]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
-
-    // Simulated short delay for animation/realism
-    setTimeout(() => {
-      // Correct password
-      if (password === "NamiCRM2026!") {
-        // Set cookie (valid for 7 days)
-        const expiry = new Date();
-        expiry.setDate(expiry.getDate() + 7);
-        document.cookie = `nami_session=authorized; expires=${expiry.toUTCString()}; path=/; SameSite=Strict`;
-        
-        // Save in localStorage for backup
-        localStorage.setItem("nami_session", "authorized");
-
+    setError("");
+    
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        // Secure HTTP-only cookie is now set by the backend
         router.push("/");
       } else {
-        setError("Contraseña incorrecta. Por favor, intenta de nuevo.");
+        setError(data.error || "Contraseña incorrecta. Acceso denegado.");
         setLoading(false);
       }
-    }, 800);
+    } catch (err) {
+      setError("Error de red. Inténtalo de nuevo.");
+      setLoading(false);
+    }
   };
 
   return (

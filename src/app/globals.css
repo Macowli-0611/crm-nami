@@ -5,30 +5,42 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* ── Ñami Brand Color Palette ─────────────────────────────────── */
 :root {
-  --background: #0f172a; /* Slate 900 */
-  --foreground: #f8fafc; /* Slate 50 */
-  
-  --card: #1e293b; /* Slate 800 */
-  --card-foreground: #f8fafc;
-  
-  --primary: #3b82f6; /* Blue 500 */
+  /* Dark base — professional CRM feel */
+  --background: #12101A;       /* Deep dark with warm tint */
+  --foreground: #F5F3F7;
+
+  --card: #1E1A2E;             /* Dark card with warm purple tint */
+  --card-foreground: #F5F3F7;
+
+  /* Ñami primary: warm orange */
+  --primary: #EA580C;          /* orange-600 — same as ñami CTAs */
   --primary-foreground: #ffffff;
-  
-  --secondary: #334155; /* Slate 700 */
-  --secondary-foreground: #f8fafc;
-  
-  --accent: #8b5cf6; /* Violet 500 */
+
+  --secondary: #2D2440;        /* Muted dark purple */
+  --secondary-foreground: #F5F3F7;
+
+  /* Ñami accent: magenta/pink brand color */
+  --accent: #DB2777;           /* pink-600 — ñami brand highlight */
   --accent-foreground: #ffffff;
-  
-  --destructive: #ef4444; /* Red 500 */
+
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  
-  --success: #10b981; /* Emerald 500 */
+
+  --success: #16a34a;          /* green-600 */
   --success-foreground: #ffffff;
-  
-  --warning: #f59e0b; /* Amber 500 */
+
+  --warning: #d97706;          /* amber-600 */
   --warning-foreground: #ffffff;
+
+  /* Ñami brand extras */
+  --nami-orange: #EA580C;
+  --nami-orange-light: #FB923C;
+  --nami-magenta: #DB2777;
+  --nami-magenta-light: #F472B6;
+  --nami-purple: #7C3D99;
+  --nami-purple-light: #A855F7;
 }
 
 body {
@@ -39,45 +51,68 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Glassmorphism utilities */
+/* ── Glassmorphism — warm-tinted glass ───────────────────────── */
 .glass {
-  background: rgba(30, 41, 59, 0.6);
+  background: rgba(30, 26, 46, 0.65);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(234, 88, 12, 0.08);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
 }
 
 .glass-card {
-  background: rgba(30, 41, 59, 0.8);
+  background: rgba(30, 26, 46, 0.82);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(234, 88, 12, 0.12);
   border-radius: 1rem;
   transition: all 0.3s ease;
 }
 
 .glass-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 40px rgba(234, 88, 12, 0.08);
+  border-color: rgba(234, 88, 12, 0.22);
 }
 
-/* Scrollbar styles */
+/* ── Ñami gradient utilities ─────────────────────────────────── */
+.nami-gradient-text {
+  background: linear-gradient(135deg, #FB923C, #DB2777);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nami-btn-primary {
+  background: linear-gradient(135deg, #EA580C, #C2410C);
+  color: white;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px rgba(234, 88, 12, 0.3);
+}
+
+.nami-btn-primary:hover {
+  background: linear-gradient(135deg, #F97316, #EA580C);
+  box-shadow: 0 6px 28px rgba(234, 88, 12, 0.45);
+  transform: translateY(-1px);
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--background); 
+  background: var(--background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--secondary); 
+  background: #3D2D50;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569; 
+  background: #5B4280;
 }

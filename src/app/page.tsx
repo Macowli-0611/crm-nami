@@ -167,18 +167,59 @@ export default function Home() {
 
   // MRR Estimation based on Active Clients Plans
   const estimatedMRR = activeClients.reduce((acc, curr) => {
-    const clientPlan = (curr.plan || '').toLowerCase();
-    
-    // First, look for a matching plan in our dynamic plans list
-    const matchedPlan = planes.find(p => p.name.toLowerCase() === clientPlan);
-    if (matchedPlan) {
-      return acc + matchedPlan.price;
+    const planString = curr.plan || '';
+    if (planString === '' || planString.toLowerCase() === 'ninguno') return acc;
+
+    // Split multiple plans
+    const clientPlans = planString.split(',').map((p: string) => p.trim().toLowerCase()).filter(Boolean);
+
+    let clientTotal = 0;
+
+    for (const clientPlan of clientPlans) {
+      let matchedPrice = 0;
+      let priceFound = false;
+
+      // 1. Try to find match in parsed nested plans
+      if (planes && planes.length > 0) {
+        for (const p of planes) {
+          if (p.subplans) {
+            for (const sub of p.subplans) {
+              const fullDescriptor = `${p.name} - ${sub.name}`.toLowerCase();
+              if (clientPlan === fullDescriptor || clientPlan === `plan ${fullDescriptor}`) {
+                matchedPrice = sub.price;
+                priceFound = true;
+                break;
+              }
+            }
+          }
+          if (priceFound) break;
+        }
+
+        // If no subplan matches but it matches the main plan name, default to its first subplan's price
+        if (!priceFound) {
+          const matchedParent = planes.find(p => clientPlan === p.name.toLowerCase() || clientPlan === `plan ${p.name.toLowerCase()}`);
+          if (matchedParent && matchedParent.subplans?.[0]) {
+            matchedPrice = matchedParent.subplans[0].price;
+            priceFound = true;
+          }
+        }
+      }
+
+      if (priceFound) {
+        clientTotal += matchedPrice;
+      } else {
+        // Fallbacks for legacy/safety
+        if (clientPlan.includes('pro')) {
+          clientTotal += pricePro;
+        } else if (clientPlan.includes('plus')) {
+          clientTotal += pricePlus;
+        } else if (clientPlan === 'custom') {
+          clientTotal += 120; // fallback custom price
+        }
+      }
     }
-    
-    // Fallbacks for legacy/safety
-    if (clientPlan.includes('pro')) return acc + pricePro;
-    if (clientPlan.includes('plus')) return acc + pricePlus;
-    return acc;
+
+    return acc + clientTotal;
   }, 0);
 
   // 3. Consolidated Alerts (Trial Expirations & Payments Due)
@@ -226,8 +267,8 @@ export default function Home() {
       {/* Header */}
       <header className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400">
-            Resumen General (Ñami)
+          <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-orange-400 via-pink-400 to-orange-300">
+            Panel Principal
           </h1>
           <p className="text-slate-400 mt-1">Monitoreo cruzado de clientes y salud financiera en tiempo real</p>
         </div>
@@ -256,7 +297,7 @@ export default function Home() {
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32 gap-3">
-          <Loader2 className="animate-spin text-blue-500 h-10 w-10" />
+          <Loader2 className="animate-spin text-orange-500 h-10 w-10" />
           <span className="text-slate-400 text-sm">Analizando métricas del CRM...</span>
         </div>
       ) : (
@@ -274,7 +315,7 @@ export default function Home() {
               title="Ingresos del Mes" 
               value={`$${monthlyIncome.toLocaleString('es-ES', { maximumFractionDigits: 0 })}`} 
               subValue={`MRR Estimado: $${estimatedMRR.toLocaleString('es-ES', { maximumFractionDigits: 0 })}/mes`}
-              icon={<TrendingUp size={22} className="text-blue-400" />} 
+              icon={<TrendingUp size={22} className="text-orange-400" />} 
               trend={`Total histórico: $${totalIncomeAllTime.toLocaleString('es-ES', { maximumFractionDigits: 0 })}`}
             />
             <StatCard 
@@ -288,7 +329,7 @@ export default function Home() {
               title="Balance Neto Mensual" 
               value={`${monthlyNet >= 0 ? '+' : '-'}$${Math.abs(monthlyNet).toLocaleString('es-ES', { maximumFractionDigits: 0 })}`} 
               subValue="Beneficio real"
-              icon={<DollarSign size={22} className="text-violet-400" />} 
+              icon={<DollarSign size={22} className="text-pink-400" />} 
               trend="Ingresos - Gastos del mes"
               isProfit={monthlyNet >= 0}
             />
@@ -301,7 +342,7 @@ export default function Home() {
             <div className="glass-card p-6 flex flex-col justify-between">
               <div>
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Activity size={18} className="text-blue-400" />
+                  <Activity size={18} className="text-orange-400" />
                   Actividad Financiera Reciente
                 </h2>
                 <p className="text-xs text-slate-400 mb-6">Últimos movimientos cargados en la hoja de finanzas</p>
@@ -331,7 +372,7 @@ export default function Home() {
                 </div>
               </div>
               
-              <Link href="/finanzas" className="mt-6 w-full text-center py-2 bg-slate-800/50 hover:bg-slate-800 text-xs font-semibold text-slate-300 border border-slate-700/50 rounded-lg transition-colors block">
+              <Link href="/finanzas" className="mt-6 w-full text-center py-2 bg-orange-600/10 hover:bg-orange-600/20 text-xs font-semibold text-orange-400 border border-orange-600/30 rounded-lg transition-colors block">
                 Ver Todas las Finanzas
               </Link>
             </div>
@@ -370,9 +411,9 @@ export default function Home() {
                   {/* Commercial next actions list */}
                   {pendingActions.slice(0, 2).map((c, idx) => (
                     <div key={idx} className="bg-slate-800/10 border border-slate-800 p-3 rounded-lg flex items-start gap-2">
-                      <Briefcase size={16} className="text-violet-400 mt-0.5 shrink-0" />
+                      <Briefcase size={16} className="text-pink-400 mt-0.5 shrink-0" />
                       <div className="min-w-0">
-                        <div className="text-xs text-violet-400 font-bold uppercase">Tarea: {c.name}</div>
+                        <div className="text-xs text-pink-400 font-bold uppercase">Tarea: {c.name}</div>
                         <div className="text-xs text-slate-300 mt-1 line-clamp-2" title={c.nextAction}>{c.nextAction}</div>
                       </div>
                     </div>
@@ -403,9 +444,9 @@ export default function Home() {
                     const count = statusFunnel[status];
                     const percent = Math.round((count / totalClients) * 100);
                     
-                    let barColor = "bg-blue-500";
+                    let barColor = "bg-orange-500";
                     if (status.toLowerCase().includes('activo')) barColor = "bg-emerald-500";
-                    else if (status.toLowerCase().includes('cita') || status.toLowerCase().includes('interesado')) barColor = "bg-violet-500";
+                    else if (status.toLowerCase().includes('cita') || status.toLowerCase().includes('interesado')) barColor = "bg-pink-500";
                     else if (status.toLowerCase().includes('pendiente')) barColor = "bg-amber-500";
                     else if (status.toLowerCase().includes('no interesado')) barColor = "bg-red-500";
 
@@ -429,16 +470,69 @@ export default function Home() {
 
               <div className="mt-6 p-3 bg-slate-800/20 border border-slate-700/20 rounded-xl flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Total en Prueba</div>
-                  <div className="text-lg font-bold text-amber-400 mt-0.5">{trialsActive.length} Restaurantes</div>
+                  <div className="text-xs text-slate-500 mt-0.5">Clientes activos en sistema</div>
+                  <div className="text-2xl font-extrabold text-orange-400 mt-1">{activeClients.length} Restaurantes</div>
                 </div>
-                <Clock className="text-amber-500/80" size={24} />
+                <Clock className="text-orange-500/80" size={24} />
               </div>
             </div>
 
           </div>
 
-          {/* Row 3: Recent Contacts Log in Dashboard */}
+          {/* ── Calendar & Upcoming Events Strip ─────────────────────────────────── */}
+          <div className="glass-card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="p-3 bg-orange-500/10 rounded-xl">
+                  <TrendingUp size={22} className="text-orange-400" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-slate-200">Vencimientos Próximos</h2>
+                  <p className="text-[10px] text-slate-500">Pagos y pruebas que vencen en los próximos 10 días</p>
+                </div>
+              </div>
+              <Link
+                href="/calendario"
+                className="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all shadow-lg shadow-orange-900/30 active:scale-95"
+              >
+                <Calendar size={12} />
+                Ver Calendario
+              </Link>
+            </div>
+            {paymentAlerts.length === 0 ? (
+              <div className="flex items-center justify-center py-6 text-sm text-slate-600">
+                ✔️ Sin vencimientos próximos &mdash; todo al día
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                {paymentAlerts.slice(0, 12).map((alert, idx) => (
+                  <Link
+                    key={idx}
+                    href="/calendario"
+                    className={`p-3 rounded-xl border flex flex-col gap-1.5 transition-all hover:brightness-110 cursor-pointer ${
+                      alert.daysLeft < 0 ? 'bg-red-950/30 border-red-900/40' :
+                      alert.urgent     ? 'bg-red-500/10 border-red-500/20' :
+                                         'bg-slate-800/30 border-slate-700/30'
+                    }`}
+                  >
+                    <div className="text-[9px] font-bold text-amber-400 uppercase tracking-wider truncate">{alert.type}</div>
+                    <div className="text-xs font-semibold text-slate-200 truncate" title={alert.name}>{alert.name}</div>
+                    <span className={`text-[10px] font-bold self-start px-1.5 py-0.5 rounded-full ${
+                      alert.daysLeft < 0  ? 'bg-red-950 text-red-400 border border-red-900/50' :
+                      alert.daysLeft === 0 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse' :
+                      alert.urgent        ? 'bg-red-500/15 text-red-400 border border-red-500/25' :
+                                            'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                    }`}>
+                      {alert.daysLeft < 0  ? `Vencido ${Math.abs(alert.daysLeft)}d` :
+                       alert.daysLeft === 0 ? 'Hoy' : `${alert.daysLeft}d`}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ── Recent Contacts Log ────────────────────────────────────────── */}
           <div className="glass-card p-6">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <Award size={18} className="text-blue-400" />
@@ -473,13 +567,18 @@ export default function Home() {
                         </span>
                       </td>
                       <td className="py-4 text-slate-300">
-                        <span className={`px-2 py-0.5 rounded text-xs border ${
-                          (c.plan || 'Ninguno').toLowerCase().includes('pro') ? 'bg-violet-500/10 border-violet-500/20 text-violet-400 font-bold' :
-                          (c.plan || 'Ninguno').toLowerCase().includes('plus') ? 'bg-blue-500/10 border-blue-500/20 text-blue-400 font-bold' :
-                          'bg-slate-800 text-slate-400 border-slate-700/50'
-                        }`}>
-                          {c.plan || 'Ninguno'}
-                        </span>
+                        <div className="flex flex-wrap gap-1 max-w-[200px]">
+                          {(c.plan || 'Ninguno').split(',').map((p: string) => p.trim()).filter(Boolean).map((pl: string, idx: number) => (
+                            <span key={idx} className={`px-2 py-0.5 rounded text-[10px] border ${
+                              pl.toLowerCase() === 'ninguno' ? 'bg-slate-800 text-slate-400 border-slate-700/50' :
+                              pl.toLowerCase().includes('pro') ? 'bg-violet-500/10 border-violet-500/20 text-violet-400 font-bold' :
+                              pl.toLowerCase().includes('plus') ? 'bg-blue-500/10 border-blue-500/20 text-blue-400 font-bold' :
+                              'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 font-bold'
+                            }`}>
+                              {pl}
+                            </span>
+                          ))}
+                        </div>
                       </td>
                       <td className="py-4 text-slate-300 text-xs font-semibold">
                         {formatDateForDisplay(c.payDate)}

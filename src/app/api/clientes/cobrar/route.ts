@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import path from 'path';
 
+export const dynamic = 'force-dynamic';
+
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID || '1yDwJXy_LULzuwObs_EiIwqKHfnmH-CT_TXDZewHyxYA';
 
 async function getSheetsInstance() {
@@ -61,16 +63,29 @@ export async function POST(request: Request) {
 
     // 3. Determine pricing value of the plan dynamically from Config
     let amount = 0;
-    let plans: { name: string; price: number }[] = [];
+    let parsedPlans: any[] = [];
+    let legacyPlans: { name: string; price: number }[] = [];
 
     try {
       const configRes = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: 'Configuración!A2:B30',
+        range: 'Configuración!A2:B100',
       });
       const configRows = configRes.data.values || [];
       
-      // Look for custom plans first
+      const plansDataJsonRow = configRows.find((r: any) => r[0] === 'plans_data_json');
+      if (plansDataJsonRow?.[1]) {
+        try {
+          const parsed = JSON.parse(plansDataJsonRow[1]);
+          if (Array.isArray(parsed)) {
+            parsedPlans = parsed;
+          }
+        } catch (e) {
+          console.error("Error parsing plans_data_json inside cobrar route:", e);
+        }
+      }
+
+      // Load legacy plans just in case of fallback
       for (let i = 1; i <= 5; i++) {
         const nameKey = `plan_${i}_name`;
         const priceKey = `plan_${i}_price`;
@@ -79,9 +94,8 @@ export async function POST(request: Request) {
         if (nameRow || priceRow) {
           const nameVal = nameRow?.[1]?.trim() || '';
           const priceVal = priceRow?.[1]?.trim() || '';
-          // Only include if name or price is non-empty
           if (nameVal !== '' || priceVal !== '') {
-            plans.push({
+            legacyPlans.push({
               name: nameVal || `Plan ${i}`,
               price: parseFloat(priceVal || '0') || 0
             });
@@ -89,31 +103,76 @@ export async function POST(request: Request) {
         }
       }
 
-      // If no plans found, fall back to legacy keys
-      if (plans.length === 0) {
+      if (legacyPlans.length === 0) {
         const legacyPlus = configRows.find((r: any) => r[0] === 'price_plus')?.[1];
         const legacyPro = configRows.find((r: any) => r[0] === 'price_pro')?.[1];
-        plans.push({ name: "Plus", price: legacyPlus ? parseFloat(legacyPlus) || 120 : 120 });
-        plans.push({ name: "Pro", price: legacyPro ? parseFloat(legacyPro) || 250 : 250 });
+        legacyPlans.push({ name: "Plus", price: legacyPlus ? parseFloat(legacyPlus) || 120 : 120 });
+        legacyPlans.push({ name: "Pro", price: legacyPro ? parseFloat(legacyPro) || 250 : 250 });
       }
     } catch (e) {
       console.error("Error loading config inside cobrar:", e);
     }
 
-    // Find the exact plan price
-    const matchedPlan = plans.find(p => p.name.toLowerCase() === plan.toLowerCase());
-    if (matchedPlan) {
-      amount = matchedPlan.price;
-    } else {
-      // General fallbacks if plan name contains 'pro' or 'plus'
-      const planLower = plan.toLowerCase();
-      if (planLower.includes('pro')) {
-        amount = plans.find(p => p.name.toLowerCase() === 'pro')?.price || 250;
-      } else if (planLower.includes('plus')) {
-        amount = plans.find(p => p.name.toLowerCase() === 'plus')?.price || 120;
-      } else {
-        amount = 120; // default backup
+    // Resolve price (supporting multiple comma-separated plans)
+    const planString = plan || '';
+    const plansList = planString.split(',').map((p: string) => p.trim()).filter(Boolean);
+
+    amount = 0;
+
+    for (const planItem of plansList) {
+      const planLower = planItem.toLowerCase();
+      let priceFound = false;
+      let itemAmount = 0;
+
+      // 1. Try to find match in parsed nested plans
+      if (parsedPlans.length > 0) {
+        for (const p of parsedPlans) {
+          if (p.subplans) {
+            for (const sub of p.subplans) {
+              const fullDescriptor = `${p.name} - ${sub.name}`.toLowerCase();
+              if (planLower === fullDescriptor || planLower === `plan ${fullDescriptor}`) {
+                itemAmount = sub.price;
+                priceFound = true;
+                break;
+              }
+            }
+          }
+          if (priceFound) break;
+        }
+
+        // If no subplan matches but it matches the main plan name, default to its first subplan's price
+        if (!priceFound) {
+          const matchedParent = parsedPlans.find(p => planLower === p.name.toLowerCase() || planLower === `plan ${p.name.toLowerCase()}`);
+          if (matchedParent && matchedParent.subplans?.[0]) {
+            itemAmount = matchedParent.subplans[0].price;
+            priceFound = true;
+          }
+        }
       }
+
+      // 2. Try legacy fallback match
+      if (!priceFound) {
+        const matchedLegacy = legacyPlans.find(p => p.name.toLowerCase() === planLower);
+        if (matchedLegacy) {
+          itemAmount = matchedLegacy.price;
+          priceFound = true;
+        }
+      }
+
+      // 3. Last resort general fallbacks
+      if (!priceFound) {
+        if (planLower.includes('pro')) {
+          itemAmount = legacyPlans.find(p => p.name.toLowerCase() === 'pro')?.price || 250;
+        } else if (planLower.includes('plus')) {
+          itemAmount = legacyPlans.find(p => p.name.toLowerCase() === 'plus')?.price || 120;
+        } else if (planLower === 'custom') {
+          itemAmount = 120; // default backup for Custom
+        } else {
+          itemAmount = 120; // default backup
+        }
+      }
+
+      amount += itemAmount;
     }
 
     // 4. Record income in Finanzas sheet
