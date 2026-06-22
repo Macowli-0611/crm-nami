@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Users, DollarSign, Settings, LogOut, Menu, X, CalendarDays } from 'lucide-react';
+import { LayoutDashboard, Users, DollarSign, Settings, LogOut, Menu, X, CalendarDays, Megaphone } from 'lucide-react';
 
 interface CalEvent {
   date: string;
@@ -180,6 +180,13 @@ export default function Sidebar() {
           <Link href="/finanzas" onClick={closeSidebar} className={linkClass('/finanzas')}>
             <DollarSign size={20} />
             <span className="font-medium">Finanzas</span>
+          </Link>
+
+          {/* Marketing */}
+          <SectionLabel>Marketing</SectionLabel>
+          <Link href="/marketing" onClick={closeSidebar} className={linkClass('/marketing')}>
+            <Megaphone size={20} />
+            <span className="font-medium">Herramientas</span>
           </Link>
 
           {/* System */}

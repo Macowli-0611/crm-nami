@@ -1,0 +1,370 @@
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador Ñami Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --brand-color: #796614; } /* Color por defecto Gallego's Mix */
+        body { font-family: 'Inter', sans-serif; }
+        .text-brand { color: var(--brand-color); }
+        .bg-brand { background-color: var(--brand-color); }
+        .border-brand { border-color: var(--brand-color); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* Estilos específicos para la UI de Ñami */
+        .nami-header-bg { background-color: #0A0A0A; }
+        .nami-btn-icon { background: rgba(255,255,255,0.1); backdrop-filter: blur(5px); }
+        .nami-tab { border: 1px solid #E5E7EB; border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; font-weight: 600; color: #4B5563; white-space: nowrap; }
+        .nami-tab.active { background-color: var(--brand-color); color: white; border-color: var(--brand-color); }
+        .nami-badge-custom { border: 1px solid var(--brand-color); color: var(--brand-color); border-radius: 12px; padding: 2px 8px; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+        .nami-plus-btn { background-color: var(--brand-color); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; position: absolute; bottom: -8px; right: -8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col md:flex-row overflow-hidden">
+    
+    <!-- Panel Lateral de Configuración -->
+    <aside class="w-full md:w-1/3 bg-white h-full shadow-2xl p-6 overflow-y-auto z-20">
+        <h1 class="text-2xl font-bold mb-6 text-gray-800">Generador Ñami Pro</h1>
+        
+        <div class="space-y-6">
+            <!-- 1. Marca y Portada -->
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">1. Marca y Apariencia</label>
+                <div class="space-y-3">
+                    <input type="text" id="in-res" placeholder="Nombre Restaurante" class="w-full p-3 border rounded-xl text-sm" oninput="update()">
+                    
+                    <div class="flex gap-2 items-center">
+                        <label class="text-sm text-gray-600 flex-1">Color de Marca:</label>
+                        <input type="color" id="in-color" value="#796614" class="w-12 h-10 cursor-pointer rounded-lg border-0 p-0" oninput="updateColor()">
+                    </div>
+                    
+                    <input type="text" id="in-phrase" placeholder="Frase (ej: Come lo que te gusta...)" class="w-full p-3 border rounded-xl text-sm" oninput="update()">
+
+                    <label class="flex items-center justify-center gap-3 p-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 transition">
+                        <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 256 256"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,16V158.75l-26.07-26.06a16,16,0,0,0-22.63,0l-20,20-44-44a16,16,0,0,0-22.62,0L40,149.37V56ZM40,172l52-52,44,44L104,196a8,8,0,0,1-11.31-11.31L114.34,163,68.69,117.34l-28.69,28.7Zm176,28H126.63l54.06-54.06,35.31,35.31ZM96,112a16,16,0,1,1,16-16A16,16,0,0,1,96,112Z"></path></svg>
+                        <span class="text-sm font-medium text-gray-600">Subir Banner/Fondo</span>
+                        <input type="file" class="hidden" accept="image/*" onchange="loadImg(event, 'view-banner')">
+                    </label>
+
+                    <label class="flex items-center justify-center gap-3 p-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 transition">
+                        <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 256 256"><path d="M208.57,59.39A104,104,0,1,0,59.39,208.57a104,104,0,1,0,149.18-149.18Zm-22.6,98.24h-42L124.62,191,152,221.72A88,88,0,0,1,85.25,212l16.14-53.76,33.56-19.38-23.71-41L85.12,68l-37.49,15.9A88,88,0,0,1,165.41,40l-20.61,42.49,19.35,33.51L217,99.3a88.16,88.16,0,0,1-31,58.33Z"></path></svg>
+                        <span class="text-sm font-medium text-gray-600">Subir Logo Cuadrado</span>
+                        <input type="file" class="hidden" accept="image/*" onchange="loadImg(event, 'view-logo')">
+                    </label>
+
+                    <label class="flex items-center justify-center gap-3 p-2.5 border-2 border-dashed border-orange-200 bg-orange-50 rounded-xl cursor-pointer hover:bg-orange-100 transition mt-4">
+                        <span class="text-xs font-bold text-orange-600">Subir Logo de ñami.app (Footer)</span>
+                        <input type="file" class="hidden" accept="image/*" onchange="loadImg(event, 'view-nami-logo')">
+                    </label>
+                </div>
+            </div>
+
+            <!-- 2. Categoría Principal -->
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">2. Título de Categoría</label>
+                <input type="text" id="in-cat" placeholder="Ej: ALMUERZOS, PLATOS FUERTES..." class="w-full p-3 border rounded-xl text-sm" oninput="update()">
+            </div>
+
+            <!-- 3. Plato 1 -->
+            <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 block">3. Primer Plato</label>
+                <div class="space-y-3">
+                    <input type="text" id="in-d1-n" value="Cazuela de frijoles" placeholder="Nombre (ej: Cazuela de frijoles)" class="w-full p-2 border rounded-lg text-sm" oninput="update()">
+                    <div class="relative">
+                        <span class="absolute left-3 top-2 text-gray-500 font-bold">$</span>
+                        <input type="text" id="in-d1-p" value="16.000" placeholder="16.000" class="w-full p-2 pl-7 border rounded-lg text-sm" oninput="formatPrice(this)">
+                    </div>
+                    <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 256 256"><path d="M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z"></path></svg>
+                        <span class="text-xs text-gray-600">Cambiar Foto del Plato 1</span>
+                        <input type="file" class="hidden" accept="image/*" onchange="loadImg(event, 'view-d1')">
+                    </label>
+                </div>
+            </div>
+
+            <!-- 4. Plato 2 -->
+            <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 block">4. Segundo Plato</label>
+                <div class="space-y-3">
+                    <input type="text" id="in-d2-n" value="Menu dia LUNES" placeholder="Nombre (ej: Menu dia LUNES)" class="w-full p-2 border rounded-lg text-sm" oninput="update()">
+                    <div class="relative">
+                        <span class="absolute left-3 top-2 text-gray-500 font-bold">$</span>
+                        <input type="text" id="in-d2-p" value="16.000" placeholder="16.000" class="w-full p-2 pl-7 border rounded-lg text-sm" oninput="formatPrice(this)">
+                    </div>
+                    <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 256 256"><path d="M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z"></path></svg>
+                        <span class="text-xs text-gray-600">Cambiar Foto del Plato 2</span>
+                        <input type="file" class="hidden" accept="image/*" onchange="loadImg(event, 'view-d2')">
+                    </label>
+                </div>
+            </div>
+
+            <button onclick="download()" class="w-full bg-brand text-white p-4 rounded-2xl font-bold shadow-lg hover:opacity-90 transition-all flex justify-center items-center gap-2">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 256 256"><path d="M82.34,141.66a8,8,0,0,1,11.32-11.32L120,156.69V48a8,8,0,0,1,16,0V156.69l26.34-26.35a8,8,0,0,1,11.32,11.32l-40,40a8,8,0,0,1-11.32,0ZM216,152a8,8,0,0,0-8,8v48H48V160a8,8,0,0,0-16,0v56a8,8,0,0,0,8,8H216a8,8,0,0,0,8-8V160A8,8,0,0,0,216,152Z"></path></svg>
+                Descargar Imagen
+            </button>
+        </div>
+    </aside>
+
+    <!-- Vista Previa del Mockup -->
+    <main class="flex-1 flex justify-center items-center p-4 bg-gray-200">
+        <div id="capture" class="w-[375px] h-[812px] bg-[#F8F9FA] rounded-[40px] border-[12px] border-gray-900 overflow-hidden relative shadow-2xl flex flex-col">
+            
+            <!-- Top Section (Dark) -->
+            <div class="relative w-full h-[240px] nami-header-bg shrink-0">
+                <div class="relative h-[240px] shrink-0 bg-gray-900 rounded-b-[40px] overflow-hidden">
+                <img id="view-banner" crossorigin="anonymous" src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80" alt="Banner" class="absolute inset-0 w-full h-full object-cover opacity-60">
+                
+                <!-- Gradient Overlay for readability -->
+                <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-[#0A0A0A]"></div>
+
+                <!-- Top Icons -->
+                <div class="absolute top-6 left-4 right-4 flex justify-between items-center z-10">
+                    <button class="w-10 h-10 rounded-full flex items-center justify-center nami-btn-icon text-white">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path></svg>
+                    </button>
+                    <div class="flex gap-3">
+                        <button class="w-10 h-10 rounded-full flex items-center justify-center nami-btn-icon text-white">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"></path></svg>
+                        </button>
+                        <button class="w-10 h-10 rounded-full flex items-center justify-center nami-btn-icon text-white">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 256 256"><path d="M176,168a40,40,0,0,0-34.42,19.38l-49.88-28.51a39.81,39.81,0,0,0,0-21.74l49.88-28.51A40,40,0,1,0,136,80a39.81,39.81,0,0,0,0,21.74l-49.88,28.51A40,40,0,1,0,86.12,171.1l49.88,28.52A40,40,0,1,0,176,168Zm0-112a24,24,0,1,1-24,24A24,24,0,0,1,176,56ZM64,152a24,24,0,1,1,24-24A24,24,0,0,1,64,152Zm112,48a24,24,0,1,1,24-24A24,24,0,0,1,176,200Z"></path></svg>
+                        </button>
+                        <button class="w-10 h-10 rounded-full flex items-center justify-center bg-white text-gray-400">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 256 256"><path d="M240,94c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,220.66,16,164,16,94A62.07,62.07,0,0,1,78,32c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32A62.07,62.07,0,0,1,240,94Z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Info Info Bottom -->
+                <div class="absolute bottom-4 left-4 right-4 flex items-end gap-4 z-10">
+                    <!-- Logo Cuadrado -->
+                    <div class="w-[70px] h-[70px] rounded-2xl overflow-hidden border border-white/20 shrink-0 bg-black z-20">
+                        <img id="view-logo" src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200&q=80" alt="Logo" class="w-full h-full object-cover">
+                    </div>
+                    
+                    <div class="pb-1">
+                        <h2 id="view-res" class="text-2xl font-bold text-white tracking-tight uppercase">GALLEGO'S</h2>
+                        <div class="flex items-center gap-2 mt-1 mb-2">
+                            <svg class="w-3.5 h-3.5 text-gray-300" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z"></path></svg>
+                            <span class="text-gray-300 text-xs font-medium">Abierto hoy a las 17:00</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <svg class="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 256 256"><path d="M234.29,114.85l-45,38.83L203,211.75a16.4,16.4,0,0,1-24.5,17.82L128,198.49,77.47,229.57A16.4,16.4,0,0,1,53,211.75l13.76-58.07-45-38.83A16.4,16.4,0,0,1,31.08,86l59-4.76,22.76-55.08a16.36,16.36,0,0,1,30.27,0l22.75,55.08,59,4.76a16.4,16.4,0,0,1,9.37,28.86Z"></path></svg>
+                            <svg class="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 256 256"><path d="M234.29,114.85l-45,38.83L203,211.75a16.4,16.4,0,0,1-24.5,17.82L128,198.49,77.47,229.57A16.4,16.4,0,0,1,53,211.75l13.76-58.07-45-38.83A16.4,16.4,0,0,1,31.08,86l59-4.76,22.76-55.08a16.36,16.36,0,0,1,30.27,0l22.75,55.08,59,4.76a16.4,16.4,0,0,1,9.37,28.86Z"></path></svg>
+                            <svg class="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 256 256"><path d="M234.29,114.85l-45,38.83L203,211.75a16.4,16.4,0,0,1-24.5,17.82L128,198.49,77.47,229.57A16.4,16.4,0,0,1,53,211.75l13.76-58.07-45-38.83A16.4,16.4,0,0,1,31.08,86l59-4.76,22.76-55.08a16.36,16.36,0,0,1,30.27,0l22.75,55.08,59,4.76a16.4,16.4,0,0,1,9.37,28.86Z"></path></svg>
+                            <svg class="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 256 256"><path d="M234.29,114.85l-45,38.83L203,211.75a16.4,16.4,0,0,1-24.5,17.82L128,198.49,77.47,229.57A16.4,16.4,0,0,1,53,211.75l13.76-58.07-45-38.83A16.4,16.4,0,0,1,31.08,86l59-4.76,22.76-55.08a16.36,16.36,0,0,1,30.27,0l22.75,55.08,59,4.76a16.4,16.4,0,0,1,9.37,28.86Z"></path></svg>
+                            <svg class="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 256 256"><path d="M234.29,114.85l-45,38.83L203,211.75a16.4,16.4,0,0,1-24.5,17.82L128,198.49,77.47,229.57A16.4,16.4,0,0,1,53,211.75l13.76-58.07-45-38.83A16.4,16.4,0,0,1,31.08,86l59-4.76,22.76-55.08a16.36,16.36,0,0,1,30.27,0l22.75,55.08,59,4.76a16.4,16.4,0,0,1,9.37,28.86Z"></path></svg>
+                            <span class="text-white text-xs font-bold ml-1">5.0</span>
+                            <span class="text-gray-400 text-xs">(1)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- White Content Area -->
+            <div class="flex-1 bg-white relative rounded-t-2xl -mt-2 z-20 overflow-hidden flex flex-col">
+                
+                <!-- Tabs -->
+                <div class="flex items-center gap-2 px-4 py-4 shrink-0 border-b border-gray-100">
+                    <div class="nami-tab active">Todo</div>
+                    <div class="nami-tab">Almuerzos</div>
+                    <div class="nami-tab">Especiales</div>
+                    <div class="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center shrink-0 ml-auto bg-gray-50 shadow-sm">
+                        <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 256 256"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path></svg>
+                    </div>
+                </div>
+
+                <!-- Menu List Scrollable -->
+                <div class="flex-1 p-4 overflow-y-auto no-scrollbar pb-6 flex flex-col">
+                    <p id="view-phrase" class="text-gray-500 text-sm mb-4 shrink-0">Come lo que te gusta, pero que sea rico y saludable👨🏽🍳🥘🍽️</p>
+                    
+                    <!-- Category Header -->
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-1 h-5 bg-brand rounded-full"></div>
+                        <h3 id="view-cat" class="font-bold text-gray-500 tracking-widest text-sm uppercase">ALMUERZOS</h3>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- Plato 1 -->
+                        <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex gap-4 h-[135px] items-center">
+                            <div class="flex-1 w-full">
+                                <div class="mb-1.5">
+                                    <span class="nami-badge-custom"><svg class="w-3 h-3 inline-block" fill="currentColor" viewBox="0 0 256 256"><path d="M32,104a8,8,0,0,1,8-8h56a8,8,0,0,1,0,16H40A8,8,0,0,1,32,104Zm216,48a8,8,0,0,1-8,8H136a8,8,0,0,1,0-16H240A8,8,0,0,1,248,152Zm-8,40H184a8,8,0,0,0,0,16h56a8,8,0,0,0,0-16Zm-80,0H40a8,8,0,0,0,0,16H160a8,8,0,0,0,0-16Zm16-40a24,24,0,1,0-24,24A24,24,0,0,0,176,152Zm-32,0a8,8,0,1,1,8,8A8,8,0,0,1,144,152ZM104,80A24,24,0,1,0,128,104,24,24,0,0,0,104,80Zm0,32a8,8,0,1,1,8-8A8,8,0,0,1,104,112Zm136-16H136a8,8,0,0,0,0,16H240a8,8,0,0,0,0-16Z"></path></svg> CUSTOM</span>
+                                </div>
+                                <h4 id="view-d1-n" class="font-bold text-gray-900 text-[15px] leading-tight mb-1">Cazuela de frijoles</h4>
+                                <div class="text-gray-400 text-[11px] leading-snug mb-1.5">Porción equilibrada de arroz blanco, ensalada fresca y proteína.</div>
+                                <div id="view-d1-p" class="text-brand font-bold text-sm">$ 16.000</div>
+                            </div>
+                            <div class="w-[96px] h-[96px] rounded-xl overflow-visible relative shrink-0 z-10">
+                                <img id="view-d1" crossorigin="anonymous" src="https://images.unsplash.com/photo-1548943487-a2e4e43b485d?w=300&q=80" alt="Plato 1" class="w-full h-full object-cover rounded-xl shadow-sm border border-gray-100 relative z-0">
+                                <button class="nami-plus-btn z-10">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Plato 2 -->
+                        <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex gap-4 h-[135px] items-center">
+                            <div class="flex-1 w-full">
+                                <div class="mb-1.5">
+                                    <span class="nami-badge-custom"><svg class="w-3 h-3 inline-block" fill="currentColor" viewBox="0 0 256 256"><path d="M32,104a8,8,0,0,1,8-8h56a8,8,0,0,1,0,16H40A8,8,0,0,1,32,104Zm216,48a8,8,0,0,1-8,8H136a8,8,0,0,1,0-16H240A8,8,0,0,1,248,152Zm-8,40H184a8,8,0,0,0,0,16h56a8,8,0,0,0,0-16Zm-80,0H40a8,8,0,0,0,0,16H160a8,8,0,0,0,0-16Zm16-40a24,24,0,1,0-24,24A24,24,0,0,0,176,152Zm-32,0a8,8,0,1,1,8,8A8,8,0,0,1,144,152ZM104,80A24,24,0,1,0,128,104,24,24,0,0,0,104,80Zm0,32a8,8,0,1,1,8-8A8,8,0,0,1,104,112Zm136-16H136a8,8,0,0,0,0,16H240a8,8,0,0,0,0-16Z"></path></svg> CUSTOM</span>
+                                </div>
+                                <h4 id="view-d2-n" class="font-bold text-gray-900 text-[15px] leading-tight mb-1">Menu dia LUNES</h4>
+                                <div class="text-gray-400 text-[11px] leading-snug mb-1.5">Sancocho de pollo, porción de arroz blanco y carnes.</div>
+                                <div id="view-d2-p" class="text-brand font-bold text-sm">$ 16.000</div>
+                            </div>
+                            <div class="w-[96px] h-[96px] rounded-xl overflow-visible relative shrink-0 z-10">
+                                <img id="view-d2" crossorigin="anonymous" src="https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=300&q=80" alt="Plato 2" class="w-full h-full object-cover rounded-xl shadow-sm border border-gray-100 relative z-0">
+                                <button class="nami-plus-btn z-10">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Footer Ñami -->
+                    <div class="mt-auto pt-10 pb-2 flex flex-col items-center text-center opacity-80 shrink-0">
+                        <div class="flex items-center gap-2 mb-2">
+                            <img id="view-nami-logo" src="./nami-logo.png" alt="Ñami" class="w-7 h-7 rounded-[8px] shadow-sm object-cover bg-[#FF6B00]" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI0ZGNkIwMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNjglIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNiIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNGREUwNDciPsOxPC90ZXh0Pjwvc3ZnPg=='">
+                            <span class="font-bold text-gray-800 text-[14px] tracking-tight">ñami.app</span>
+                        </div>
+                        <p class="text-[8.5px] leading-[1.3] text-gray-400 max-w-[280px]">
+                            Nota legal: Esta imagen es una simulación generada con fines de demostración. Las marcas, logos, precios y fotografías mostrados son ilustrativos, pertenecen a sus respectivos dueños y no tienen valor comercial.
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function saveCache() {
+            const data = {
+                res: document.getElementById('in-res').value,
+                color: document.getElementById('in-color').value,
+                cat: document.getElementById('in-cat') ? document.getElementById('in-cat').value : '',
+                phrase: document.getElementById('in-phrase').value,
+                d1n: document.getElementById('in-d1-n').value,
+                d1p: document.getElementById('in-d1-p').value,
+                d2n: document.getElementById('in-d2-n').value,
+                d2p: document.getElementById('in-d2-p').value
+            };
+            localStorage.setItem('nami-marketing-cache', JSON.stringify(data));
+        }
+
+        function loadCache() {
+            try {
+                const dataStr = localStorage.getItem('nami-marketing-cache');
+                if (dataStr) {
+                    const data = JSON.parse(dataStr);
+                    if(data.res) document.getElementById('in-res').value = data.res;
+                    if(data.color) {
+                        document.getElementById('in-color').value = data.color;
+                        document.documentElement.style.setProperty('--brand-color', data.color);
+                    }
+                    if(data.cat && document.getElementById('in-cat')) document.getElementById('in-cat').value = data.cat;
+                    if(data.phrase) document.getElementById('in-phrase').value = data.phrase;
+                    if(data.d1n) document.getElementById('in-d1-n').value = data.d1n;
+                    if(data.d1p) document.getElementById('in-d1-p').value = data.d1p;
+                    if(data.d2n) document.getElementById('in-d2-n').value = data.d2n;
+                    if(data.d2p) document.getElementById('in-d2-p').value = data.d2p;
+                }
+                
+                // Cargar el logo de ñami si fue guardado
+                const savedLogo = localStorage.getItem('nami-logo-cache');
+                if (savedLogo) {
+                    const logoImg = document.getElementById('view-nami-logo');
+                    if (logoImg) logoImg.src = savedLogo;
+                }
+            } catch(e) {}
+            
+            // Format existing prices and run update
+            formatPrice(document.getElementById('in-d1-p'));
+            formatPrice(document.getElementById('in-d2-p'));
+            update();
+        }
+
+        function formatPrice(input) {
+            if(!input || !input.value) return;
+            let val = input.value.replace(/\D/g, '');
+            if(val) {
+                input.value = Number(val).toLocaleString('es-CO');
+            } else {
+                input.value = '';
+            }
+            update();
+        }
+
+        function update() {
+            document.getElementById('view-res').innerText = document.getElementById('in-res').value || "GALLEGO'S";
+            
+            const catElem = document.getElementById('view-cat');
+            if (catElem) {
+                catElem.innerText = document.getElementById('in-cat') && document.getElementById('in-cat').value ? document.getElementById('in-cat').value : 'ALMUERZOS';
+            }
+            
+            document.getElementById('view-phrase').innerText = document.getElementById('in-phrase').value || 'Come lo que te gusta, pero que sea rico y saludable👨🏽🍳🥘🍽️';
+            document.getElementById('view-d1-n').innerText = document.getElementById('in-d1-n').value || 'Cazuela de frijoles';
+            document.getElementById('view-d1-p').innerText = document.getElementById('in-d1-p').value ? '$ ' + document.getElementById('in-d1-p').value : '$ 16.000';
+            document.getElementById('view-d2-n').innerText = document.getElementById('in-d2-n').value || 'Menu dia LUNES';
+            document.getElementById('view-d2-p').innerText = document.getElementById('in-d2-p').value ? '$ ' + document.getElementById('in-d2-p').value : '$ 16.000';
+            
+            saveCache();
+        }
+        
+        function updateColor() {
+            const col = document.getElementById('in-color').value;
+            document.documentElement.style.setProperty('--brand-color', col);
+            saveCache();
+        }
+        
+        function loadImg(e, id) {
+            if(e.target.files && e.target.files[0]) {
+                const file = e.target.files[0];
+                document.getElementById(id).src = URL.createObjectURL(file);
+                
+                // Si es el logo de ñami, guardarlo en caché (Base64) para siempre
+                if (id === 'view-nami-logo') {
+                    const reader = new FileReader();
+                    reader.onloadend = function() {
+                        try {
+                            localStorage.setItem('nami-logo-cache', reader.result);
+                        } catch(error) {
+                            console.warn('No se pudo guardar el logo en caché', error);
+                        }
+                    }
+                    reader.readAsDataURL(file);
+                }
+            }
+        }
+        
+        function download() {
+            const captureArea = document.getElementById('capture');
+            
+            htmlToImage.toPng(captureArea, { 
+                pixelRatio: 2,
+                imagePlaceholder: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+            })
+                .then(function (dataUrl) {
+                    const link = document.createElement('a');
+                    link.download = 'mockup-nami.png';
+                    link.href = dataUrl;
+                    link.click();
+                })
+                .catch(function (error) {
+                    console.error('Error generando imagen:', error);
+                    alert("Hubo un error al generar la imagen. Intenta subir fotos de menor tamaño.");
+                });
+        }
+
+        // Cargar caché al iniciar
+        window.addEventListener('DOMContentLoaded', loadCache);
+    </script>
+</body>
+</html>
