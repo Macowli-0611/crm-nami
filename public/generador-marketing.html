@@ -77,6 +77,7 @@
                         <span class="absolute left-3 top-2 text-gray-500 font-bold">$</span>
                         <input type="text" id="in-d1-p" value="16.000" placeholder="16.000" class="w-full p-2 pl-7 border rounded-lg text-sm" oninput="formatPrice(this)">
                     </div>
+                    <textarea id="in-d1-desc" class="w-full p-2 border rounded-lg text-sm resize-none" rows="2" placeholder="Descripción (ej: Porción equilibrada...)" oninput="update()">Porción equilibrada de arroz blanco, ensalada fresca y proteína.</textarea>
                     <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer hover:bg-gray-50">
                         <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 256 256"><path d="M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z"></path></svg>
                         <span class="text-xs text-gray-600">Cambiar Foto del Plato 1</span>
@@ -94,6 +95,7 @@
                         <span class="absolute left-3 top-2 text-gray-500 font-bold">$</span>
                         <input type="text" id="in-d2-p" value="16.000" placeholder="16.000" class="w-full p-2 pl-7 border rounded-lg text-sm" oninput="formatPrice(this)">
                     </div>
+                    <textarea id="in-d2-desc" class="w-full p-2 border rounded-lg text-sm resize-none" rows="2" placeholder="Descripción (ej: Sancocho de pollo...)" oninput="update()">Sancocho de pollo, porción de arroz blanco y carnes.</textarea>
                     <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer hover:bg-gray-50">
                         <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 256 256"><path d="M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z"></path></svg>
                         <span class="text-xs text-gray-600">Cambiar Foto del Plato 2</span>
@@ -196,7 +198,7 @@
                                     <span class="nami-badge-custom"><svg class="w-3 h-3 inline-block" fill="currentColor" viewBox="0 0 256 256"><path d="M32,104a8,8,0,0,1,8-8h56a8,8,0,0,1,0,16H40A8,8,0,0,1,32,104Zm216,48a8,8,0,0,1-8,8H136a8,8,0,0,1,0-16H240A8,8,0,0,1,248,152Zm-8,40H184a8,8,0,0,0,0,16h56a8,8,0,0,0,0-16Zm-80,0H40a8,8,0,0,0,0,16H160a8,8,0,0,0,0-16Zm16-40a24,24,0,1,0-24,24A24,24,0,0,0,176,152Zm-32,0a8,8,0,1,1,8,8A8,8,0,0,1,144,152ZM104,80A24,24,0,1,0,128,104,24,24,0,0,0,104,80Zm0,32a8,8,0,1,1,8-8A8,8,0,0,1,104,112Zm136-16H136a8,8,0,0,0,0,16H240a8,8,0,0,0,0-16Z"></path></svg> CUSTOM</span>
                                 </div>
                                 <h4 id="view-d1-n" class="font-bold text-gray-900 text-[15px] leading-tight mb-1">Cazuela de frijoles</h4>
-                                <div class="text-gray-400 text-[11px] leading-snug mb-1.5">Porción equilibrada de arroz blanco, ensalada fresca y proteína.</div>
+                                <div id="view-d1-desc" class="text-gray-400 text-[11px] leading-snug mb-1.5">Porción equilibrada de arroz blanco, ensalada fresca y proteína.</div>
                                 <div id="view-d1-p" class="text-brand font-bold text-sm">$ 16.000</div>
                             </div>
                             <div class="w-[96px] h-[96px] rounded-xl overflow-visible relative shrink-0 z-10">
@@ -214,7 +216,7 @@
                                     <span class="nami-badge-custom"><svg class="w-3 h-3 inline-block" fill="currentColor" viewBox="0 0 256 256"><path d="M32,104a8,8,0,0,1,8-8h56a8,8,0,0,1,0,16H40A8,8,0,0,1,32,104Zm216,48a8,8,0,0,1-8,8H136a8,8,0,0,1,0-16H240A8,8,0,0,1,248,152Zm-8,40H184a8,8,0,0,0,0,16h56a8,8,0,0,0,0-16Zm-80,0H40a8,8,0,0,0,0,16H160a8,8,0,0,0,0-16Zm16-40a24,24,0,1,0-24,24A24,24,0,0,0,176,152Zm-32,0a8,8,0,1,1,8,8A8,8,0,0,1,144,152ZM104,80A24,24,0,1,0,128,104,24,24,0,0,0,104,80Zm0,32a8,8,0,1,1,8-8A8,8,0,0,1,104,112Zm136-16H136a8,8,0,0,0,0,16H240a8,8,0,0,0,0-16Z"></path></svg> CUSTOM</span>
                                 </div>
                                 <h4 id="view-d2-n" class="font-bold text-gray-900 text-[15px] leading-tight mb-1">Menu dia LUNES</h4>
-                                <div class="text-gray-400 text-[11px] leading-snug mb-1.5">Sancocho de pollo, porción de arroz blanco y carnes.</div>
+                                <div id="view-d2-desc" class="text-gray-400 text-[11px] leading-snug mb-1.5">Sancocho de pollo, porción de arroz blanco y carnes.</div>
                                 <div id="view-d2-p" class="text-brand font-bold text-sm">$ 16.000</div>
                             </div>
                             <div class="w-[96px] h-[96px] rounded-xl overflow-visible relative shrink-0 z-10">
@@ -252,8 +254,10 @@
                 phrase: document.getElementById('in-phrase').value,
                 d1n: document.getElementById('in-d1-n').value,
                 d1p: document.getElementById('in-d1-p').value,
+                d1desc: document.getElementById('in-d1-desc').value,
                 d2n: document.getElementById('in-d2-n').value,
-                d2p: document.getElementById('in-d2-p').value
+                d2p: document.getElementById('in-d2-p').value,
+                d2desc: document.getElementById('in-d2-desc').value
             };
             localStorage.setItem('nami-marketing-cache', JSON.stringify(data));
         }
@@ -272,8 +276,10 @@
                     if(data.phrase) document.getElementById('in-phrase').value = data.phrase;
                     if(data.d1n) document.getElementById('in-d1-n').value = data.d1n;
                     if(data.d1p) document.getElementById('in-d1-p').value = data.d1p;
+                    if(data.d1desc) document.getElementById('in-d1-desc').value = data.d1desc;
                     if(data.d2n) document.getElementById('in-d2-n').value = data.d2n;
                     if(data.d2p) document.getElementById('in-d2-p').value = data.d2p;
+                    if(data.d2desc) document.getElementById('in-d2-desc').value = data.d2desc;
                 }
                 
                 // Cargar el logo de ñami si fue guardado
@@ -312,8 +318,10 @@
             document.getElementById('view-phrase').innerText = document.getElementById('in-phrase').value || 'Come lo que te gusta, pero que sea rico y saludable👨🏽🍳🥘🍽️';
             document.getElementById('view-d1-n').innerText = document.getElementById('in-d1-n').value || 'Cazuela de frijoles';
             document.getElementById('view-d1-p').innerText = document.getElementById('in-d1-p').value ? '$ ' + document.getElementById('in-d1-p').value : '$ 16.000';
+            document.getElementById('view-d1-desc').innerText = document.getElementById('in-d1-desc').value || 'Porción equilibrada de arroz blanco, ensalada fresca y proteína.';
             document.getElementById('view-d2-n').innerText = document.getElementById('in-d2-n').value || 'Menu dia LUNES';
             document.getElementById('view-d2-p').innerText = document.getElementById('in-d2-p').value ? '$ ' + document.getElementById('in-d2-p').value : '$ 16.000';
+            document.getElementById('view-d2-desc').innerText = document.getElementById('in-d2-desc').value || 'Sancocho de pollo, porción de arroz blanco y carnes.';
             
             saveCache();
         }
