@@ -62,10 +62,21 @@
                 </div>
             </div>
 
-            <!-- 2. Categoría Principal -->
-            <div>
-                <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">2. Título de Categoría</label>
-                <input type="text" id="in-cat" placeholder="Ej: ALMUERZOS, PLATOS FUERTES..." class="w-full p-3 border rounded-xl text-sm" oninput="update()">
+            <!-- 2. Categorías (Pestañas) -->
+            <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">2. Categorías</label>
+                <div>
+                    <label class="text-[11px] text-gray-400 font-bold uppercase block mb-1">Nombre Categoría 1 (Pestaña)</label>
+                    <input type="text" id="in-tab-1" value="Almuerzos" placeholder="Categoría 1 (ej: Almuerzos)" class="w-full p-2 border rounded-lg text-sm bg-white" oninput="update()">
+                </div>
+                <div>
+                    <label class="text-[11px] text-gray-400 font-bold uppercase block mb-1">Nombre Categoría 2 (Pestaña)</label>
+                    <input type="text" id="in-tab-2" value="Especiales" placeholder="Categoría 2 (ej: Especiales)" class="w-full p-2 border rounded-lg text-sm bg-white" oninput="update()">
+                </div>
+                <div>
+                    <label class="text-[11px] text-gray-400 font-bold uppercase block mb-1">Título de la lista (Abajo, opcional)</label>
+                    <input type="text" id="in-cat" placeholder="Ej: ALMUERZOS, PLATOS FUERTES..." class="w-full p-2 border rounded-lg text-sm bg-white" oninput="update()">
+                </div>
             </div>
 
             <!-- 3. Plato 1 -->
@@ -173,8 +184,8 @@
                 <!-- Tabs -->
                 <div class="flex items-center gap-2 px-4 py-4 shrink-0 border-b border-gray-100">
                     <div class="nami-tab active">Todo</div>
-                    <div class="nami-tab">Almuerzos</div>
-                    <div class="nami-tab">Especiales</div>
+                    <div id="view-tab-1" class="nami-tab">Almuerzos</div>
+                    <div id="view-tab-2" class="nami-tab">Especiales</div>
                     <div class="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center shrink-0 ml-auto bg-gray-50 shadow-sm">
                         <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 256 256"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path></svg>
                     </div>
@@ -250,6 +261,8 @@
             const data = {
                 res: document.getElementById('in-res').value,
                 color: document.getElementById('in-color').value,
+                tab1: document.getElementById('in-tab-1').value,
+                tab2: document.getElementById('in-tab-2').value,
                 cat: document.getElementById('in-cat') ? document.getElementById('in-cat').value : '',
                 phrase: document.getElementById('in-phrase').value,
                 d1n: document.getElementById('in-d1-n').value,
@@ -272,6 +285,8 @@
                         document.getElementById('in-color').value = data.color;
                         document.documentElement.style.setProperty('--brand-color', data.color);
                     }
+                    if(data.tab1) document.getElementById('in-tab-1').value = data.tab1;
+                    if(data.tab2) document.getElementById('in-tab-2').value = data.tab2;
                     if(data.cat && document.getElementById('in-cat')) document.getElementById('in-cat').value = data.cat;
                     if(data.phrase) document.getElementById('in-phrase').value = data.phrase;
                     if(data.d1n) document.getElementById('in-d1-n').value = data.d1n;
@@ -310,9 +325,14 @@
         function update() {
             document.getElementById('view-res').innerText = document.getElementById('in-res').value || "GALLEGO'S";
             
+            const tab1Val = document.getElementById('in-tab-1').value || 'Almuerzos';
+            const tab2Val = document.getElementById('in-tab-2').value || 'Especiales';
+            document.getElementById('view-tab-1').innerText = tab1Val;
+            document.getElementById('view-tab-2').innerText = tab2Val;
+            
             const catElem = document.getElementById('view-cat');
             if (catElem) {
-                catElem.innerText = document.getElementById('in-cat') && document.getElementById('in-cat').value ? document.getElementById('in-cat').value : 'ALMUERZOS';
+                catElem.innerText = (document.getElementById('in-cat') && document.getElementById('in-cat').value ? document.getElementById('in-cat').value : tab1Val).toUpperCase();
             }
             
             document.getElementById('view-phrase').innerText = document.getElementById('in-phrase').value || 'Come lo que te gusta, pero que sea rico y saludable👨🏽🍳🥘🍽️';
